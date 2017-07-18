@@ -29,119 +29,149 @@ $(document).ready(function() {
     question: "The double dealing diva has been spotting trekking her way atop the summit the world's highest mountain",
     possible: ["Rushmore", "Everest", "Himalaya", "Kilamanjaro"],
     answer: "Everest",
-    image: "assets/images/everest.jpg"
+    image: "assets/images/everest.jpeg"
   }];
 
   var cycle = 0;
   var answerButtons;
-  var rightAnswers = 0;
-  var wrongAnswers = 0;
-  var number = 5;
-  var intervalId = 0;
-  var called = false;
+  var correct = 0;
+  var incorrect = 0;
+  var number = 30;
+  var intervalId;
   var gameOver = false;
-  var pause = false;
 
   $("#picture").html('<img class="img-responsive text-center" id="splash" src="assets/images/splash.jpg"</img>')
-  setTimeout(function() {
-    briefing();
-  }, 1000);
-
-  function briefing() {
-    $("#picture").html('<img class="img-responsive text-center" id="badge" src="assets/images/badge.png"</img>')
-    $("#question").text("Gumshoe! The elusive world trotting criminal Carmen Sandiego has stolen the Statue of Liberty. Help us capture her and recover the beloved landmark by correctly guessing her location from the provided clues. \xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0 Click on your badge to begin")
-    $('#picture').click(function() {
-      setup();
-    });
-  }
-
-  //setup();
-
-  function setup() {
-    pause = false;
-    number = 5
-    $("#time").html("time" + number);
-    clearInterval(intervalId);
-    run();
-    $("#title").text("Trivia Game");
-    $("#picture").empty();
-    $("#question").html(questions[cycle].question);
-    answerButtons = "";
-    for (var i = 0; i <= 3; i++) {
-      answerButtons += '<button value=' + questions[cycle].possible[i] + ' type="button" class="btn">' + questions[cycle].possible[i] + '</button>' + "<br>";
-      $("#answers").html(answerButtons);
-    }
-    $('button').click(function() {
-      if ($(this).val() == questions[cycle].answer) {
-        clearInterval(intervalId);
-        $(".board").empty();
-        $("#time").html("");
-        rightAnswers++;
-        display();
-      } else {
-        wrongAnswers++;
-        cycle++;
-        wrong();
-      }
-    });
-  }
-
-  function wrong() {
-    clearInterval(intervalId);
-    $(".board").empty();
-    $("#time").html("");
-    $("#picture").append('<img id="escape" src="assets/images/escape.gif"</img>')
+  if (gameOver == false) {
     setTimeout(function() {
-      pause = true;
-      setup();
+      briefing();
     }, 5000);
   }
 
-  function display() {
-    if (cycle > 6) {
-      endGame();
+  function briefing() {
+    $("#right").empty();
+    $("#wrong").empty();
+    $("#picture").html('<img class="img-responsive text-center" id="badge" src="assets/images/badge.png"</img>')
+    $("#question").text("Gumshoe! The elusive world trotting criminal Carmen Sandiego has stolen the Statue of Liberty. Help us capture her and recover the beloved landmark by correctly guessing her location from the provided clues. Succesfully guess 4 or more clues to win Click on your badge to begin")
+    $('#badge').click(function() {
+      $('#question').empty();
+      $('#badge').remove();
+      setup();
+      console.log("clicked on badge")
+    });
+  }
+
+  function setup() {
+    if (cycle < 6) {
+      run();
+      number = 30;
+      answerButtons = "";
+      $("#time").html("Time left: " + number + "s");
+      $("#title").text("Where in the World?");
+      $("#question").html(questions[cycle].question);
+      for (var i = 0; i <= 3; i++) {
+        answerButtons += '<button value=' + questions[cycle].possible[i] + ' type="button" class="btn">' + questions[cycle].possible[i] + '</button>' + "<br>";
+        $("#answers").html(answerButtons);
+      }
+
+
+      $('button').click(function() {
+        if ($(this).val() == questions[cycle].answer && gameOver == false) {
+          console.log("correct")
+          right();
+        } else {
+          console.log("incorrect")
+          wrong();
+        }
+      });
+    } else if (correct > 3) {
+      win();
+    } else if (correct < 4) {
+      lose();
     }
+  }
+
+  function right() {
+    correct++;
+    clearInterval(intervalId);
+    $("#time").empty();
+    $("#title").empty();
+    $("#question").html("Correct!");
+    $("#answers").empty();
     $("#picture").append('<img src="' + questions[cycle].image + '"</img>');
-    cycle++;
     setTimeout(function() {
-      pause = true;
+      $("#question").empty();
+      $("#picture").empty();
+      cycle++;
       setup();
     }, 1000);
   }
 
-  function endGame() {
-    gameOver = true;
-    alert('endGame');
-    if (rightAnswers > 1) {
-      $("#picture").html('<img class="img-responsive text-center" id="badge" src="assets/images/badge.png"</img>');
-      alert("yo winar");
-    }
+  function wrong() {
+    incorrect++;
+    clearInterval(intervalId);
+    $("#time").empty();
+    $("#title").empty();
+    $("#question").html("Incorrect!");
+    $("#answers").empty();
+    $("#picture").append('<img id="escape" src="assets/images/escape.gif"</img>');
+    setTimeout(function() {
+      $("#question").empty();
+      $("#picture").empty();
+      cycle++;
+      setup();
+    }, 5000);
   }
 
-
   function run() {
-    if (pause == false) {
-      intervalId = setInterval(decrement, 1000);
-    }
+    intervalId = setInterval(decrement, 1000);
   }
 
   function decrement() {
     number--;
-    $("#time").html("time" + number);
-    if (number < 0) {
-      stop();
-      alert("Time Up!");
+    $("#time").html("Time left: " + number + "s");
+    if (number < 1) {
+      outTime();
+      return;
     }
   }
 
   function stop() {
     clearInterval(intervalId);
-    cycle++;
-    wrongAnswers++;
-    setup();
   }
 
+  function outTime() {
+    clearInterval(intervalId);
+    wrong();
+  }
 
+  function win() {
+    $("#picture").append('<img id="win" src="assets/images/liberty.jpg"</img>');
+    $("#question").text("Congratulations you've recovered the statue of Liberty. Well done Gumshoe! Click to restart");
+    $("#right").text("Correct Answers: " + correct);
+    $("#wrong").text("incorrect Answers: " + incorrect);
+    $('#win').click(function() {
+      cycle = 0;
+      correct = 0;
+      incorrect = 0;
+      $("#question").empty();
+      briefing();
+      console.log("restart")
+    });
+  }
 
+  function lose() {
+    $("#picture").append('<img id="lose" src="assets/images/lose.png"</img>');
+    $("#question").text("Better luck next time! Click to restart");
+    $("#right").text("Correct Answers: " + correct);
+    $("#wrong").text("incorrect Answers: " + incorrect);
+    $('#lose').click(function() {
+      cycle = 0;
+      correct = 0;
+      incorrect = 0;
+      $("#question").empty();
+      briefing();
+      console.log("restart")
+    });
+  }
 
 });
